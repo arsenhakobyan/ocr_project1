@@ -2,7 +2,6 @@
 import sys
 import os
 import json
-import urllib.request
 
 url = json.loads(open(sys.argv[1]).read())
 dirName = (os.path.dirname(sys.argv[1]))
@@ -10,7 +9,7 @@ baseName = (os.path.basename(sys.argv[1]))
 outputFile = dirName + "/out_" + str(baseName)
 print (url["image_url"])
 
-urllib.request.urlretrieve(url["image_url"], "downloaded.jpg")
+os.system("wget -O downloaded.jpg " + url["image_url"])
 cmd = "tesseract downloaded.jpg output -psm 6"
 
 from PIL import Image

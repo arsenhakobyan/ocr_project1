@@ -1,0 +1,450 @@
+" Use Vim settings, rather then Vi settings (much better!).
+" This must be first, because it changes other options as a side effect.
+set nocompatible
+set bs=2
+
+" Make shift-insert work like in Xterm
+map <S-Insert> <MiddleMouse>
+map! <S-Insert> <MiddleMouse>
+
+" allow backspacing over everything in insert mode
+set backspace=indent,eol,start
+
+if has("vms")
+  set nobackup		" do not keep a backup file, use versions instead
+else
+  set backup		" keep a backup file
+endif
+set history=50		" keep 50 lines of command line history
+set ruler		" show the cursor position all the time
+set noshowcmd		" display incomplete commands
+set incsearch		" do incremental searching
+
+" For Win32 GUI: remove 't' flag from 'guioptions': no tearoff menu entries
+" let &guioptions = substitute(&guioptions, "t", "", "g")
+
+" Don't use Ex mode, use Q for formatting
+map Q gq
+
+" This is an alternative that also works in block mode, but the deleted
+" text is lost and it only works for putting the current register.
+"vnoremap p "_dp
+
+" Switch syntax highlighting on, when the terminal has colors
+" Also switch on highlighting the last used search pattern.
+if &t_Co > 2 || has("gui_running")
+  syntax on
+   set hlsearch
+endif
+set autoindent
+set smarttab
+
+" Only do this part when compiled with support for autocommands.
+if has("autocmd")
+
+  " Enable file type detection.
+  " Use the default filetype settings, so that mail gets 'tw' set to 72,
+  " 'cindent' is on in C files, etc.
+  " Also load indent files, to automatically do language-dependent indenting.
+  filetype plugin indent on
+
+  " Put these in an autocmd group, so that we can delete them easily.
+  augroup vimrcEx
+  au!
+
+  " For all text files set 'textwidth' to 78 characters.
+  autocmd FileType text setlocal textwidth=78
+
+  " When editing a file, always jump to the last known cursor position.
+  " Don't do it when the position is invalid or when inside an event handler
+  " (happens when dropping a file on gvim).
+  autocmd BufReadPost *
+    \ if line("'\"") > 0 && line("'\"") <= line("$") |
+    \   exe "normal g`\"" |
+    \ endif
+
+  augroup END
+
+else
+
+  set autoindent		" always set autoindenting on
+
+endif " has("autocmd")
+
+"set syntax=cpp
+set gfn=Courier\ 10\ Pitch\ 14
+set nobk
+"map <F8> :cn <CR>
+"map <F9> :tn <CR>
+"map mka <CR> :make <CR>
+"map mak <CR> :make <CR>
+"map mke <CR> :make <CR>
+"map amke <CR> :make <CR>
+map <F6> ggVG
+map sd xph
+map <C-h> <Home>
+map <C-l> <End>
+
+highlight Search ctermbg=6
+
+"set keymap=armenian-phonetic
+"set spell
+highlight SpellBad ctermbg=7
+highlight SpellLocal ctermbg=7
+highlight SpellCap ctermbg=7
+highlight SpellRare ctermbg=7
+
+au BufRead,BufNewFile *.cl set filetype=opencl
+au! Syntax opencl source /home/tigran_s/.opencl.vim
+
+augroup filetype
+  au! BufRead,BufNewFile *.ll     set filetype=llvm
+augroup END
+
+augroup filetype
+  au! BufRead,BufNewFile *.td     set filetype=tablegen
+augroup END
+
+syntax on
+filetype on
+au BufNewFile,BufRead *.def set filetype=cpp
+au BufNewFile,BufRead *.hxs set filetype=asm
+command W w
+command Wq wq
+command WQ wq
+command Q q
+command Qa qa
+
+function! GoogleCppIndent()
+	let l:cline_num = line('.')
+	let l:pline_num = prevnonblank(l:cline_num - 1)
+	let l:pline = getline(l:pline_num)
+	while l:pline =~# '\(^\s*{\s*\|^\s*//\|^\s*/\*\|\*/\s*$\)'
+		let l:pline_num = prevnonblank(l:pline_num - 1)
+		let l:pline = getline(l:pline_num)
+	endwhile
+	let l:retv = cindent('.')
+	if l:pline =~# '^\s*template.*'
+		let l:retv = cindent(l:pline_num)
+	elseif l:pline =~# '^\s*namespace.*'
+		let l:retv = 0
+	endif
+	return l:retv
+endfunction
+
+setlocal indentexpr=GoogleCppIndent()
+set expandtab
+set tabstop=4
+set shiftwidth=4
+set cinoptions=:1s,l1
+set smartindent
+match NonText /INFO/
+match DiffAdd /TODO LLVM:/
+
+
+" Groups used in the 'highlight' and 'guicursor' options default value.
+"match ErrorMsg term=standout ctermbg=DarkRed ctermfg=White guibg=Red guifg=White
+"match IncSearch term=reverse cterm=reverse gui=reverse
+"match ModeMsg term=bold cterm=bold gui=bold
+"match StatusLine term=reverse,bold cterm=reverse,bold gui=reverse,bold
+"match StatusLineNC term=reverse cterm=reverse gui=reverse
+"match VertSplit term=reverse cterm=reverse gui=reverse
+"match Visual term=reverse cterm=reverse gui=reverse guifg=Grey guibg=fg
+"match VisualNOS term=underline,bold cterm=underline,bold gui=underline,bold
+"match DiffText term=reverse cterm=bold ctermbg=Red gui=bold guibg=Red
+"match Cursor ctermbg=Green guibg=Green guifg=Black
+"match lCursor guibg=Cyan guifg=Black
+"match Directory term=bold ctermfg=LightRed guifg=Red
+"match LineNr term=underline ctermfg=Yellow guifg=Yellow
+"match MoreMsg term=bold ctermfg=LightGreen gui=bold guifg=SeaGreen
+"match NonText term=bold ctermfg=LightBlue gui=bold guifg=LightBlue guibg=grey90
+"match Question term=standout ctermfg=LightGreen gui=bold guifg=Green
+"match Search term=reverse ctermbg=Yellow ctermfg=Black guibg=Yellow guifg=Black
+"match SpecialKey term=bold ctermfg=LightBlue guifg=Blue
+"match Title term=bold ctermfg=LightMagenta gui=bold guifg=Magenta
+"match WarningMsg term=standout ctermfg=LightRed guifg=Red
+"match WildMenu term=standout ctermbg=Yellow ctermfg=Black guibg=Yellow guifg=Black
+"match Folded term=standout ctermbg=LightGrey ctermfg=DarkBlue guibg=LightGrey guifg=DarkBlue
+"match FoldColumn term=standout ctermbg=LightGrey ctermfg=DarkBlue guibg=Grey guifg=DarkBlue
+"match DiffAdd term=bold ctermbg=DarkBlue guibg=DarkBlue
+"match DiffChange term=bold ctermbg=DarkMagenta guibg=DarkMagenta
+"match DiffDelete term=bold ctermfg=Blue ctermbg=DarkCyan gui=bold guifg=Blue guibg=DarkCyan
+"match
+"match Comment ctermfg=DarkGrey ctermbg=White guifg=DarkGrey gui=bold
+"match SpecialChar ctermfg=DarkGrey ctermbg=White guifg=DarkGrey gui=bold
+"match StorageClass ctermfg=Red ctermbg=White guifg=Red gui=bold
+"match Number ctermfg=LightRed ctermbg=White guifg=LightRed gui=bold
+"map [[ ?{<CR>w99[{
+"map ][ /}<CR>b99]}
+"map ]] j0[[%/{<CR>
+"map [] k$][%?}<CR>
+"colorscheme desert
+hi DiffAdd	guibg=darkblue guifg=gray ctermfg=black ctermbg=blue  cterm=none
+"hi DiffChange	guibg=darkmagenta ctermbg=magenta cterm=none
+"hi DiffDelete	ctermfg=green ctermbg=green gui=bold guifg=Green guibg=DarkGreen
+"hi DiffText	cterm=bold ctermbg=red gui=bold guibg=Red
+
+
+" Search for selected text, forwards or backwards.
+vnoremap <silent> * :<C-U>
+            \let old_reg=getreg('"')<Bar>let old_regtype=getregtype('"')<CR>
+            \gvy/<C-R><C-R>=substitute(
+            \escape(@", '/\.*$^~['), '\_s\+', '\\_s\\+', 'g')<CR><CR>
+            \gV:call setreg('"', old_reg, old_regtype)<CR>
+vnoremap <silent> # :<C-U>
+            \let old_reg=getreg('"')<Bar>let old_regtype=getregtype('"')<CR>
+            \gvy?<C-R><C-R>=substitute(
+            \escape(@", '?\.*$^~['), '\_s\+', '\\_s\\+', 'g')<CR><CR>
+            \gV:call setreg('"', old_reg, old_regtype)<CR>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            //=========================================
+
+
+
+
+
+
+
+
+
+cmake_minimum_required (VERSION 2.6)
+project (ocr)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11 -Wall -Werror")
+find_package( OpenCV 3.1 REQUIRED )
+find_package( Tesseract 3.04 REQUIRED )
+find_package( Boost 1.54 COMPONENTS system filesystem program_options REQUIRED )
+include_directories(${Tesseract_INCLUDE_DIRS})
+include_directories( ${Boost_INCLUDE_DIRS} )
+link_directories(${Boost_LIBRARY_DIR})
+#add_library(OCREngine src/OCREngine.cpp)
+#include_directories(OCREngine ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_executable(ocr textdetection.cpp)
+
+
+target_link_libraries( ocr ${OpenCV_LIBS} ${Tesseract_LIBRARIES} ${Boost_LIBRARIES})
+
+
+
+
+
+
+
+
+
+
+
+
+
+            //=========================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ~/.bashrc: executed by bash(1) for non-login shells.
+## see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+## for examples
+#
+## If not running interactively, don't do anything
+#case $- in
+#    *i*) ;;
+#      *) return;;
+#esac
+#
+## don't put duplicate lines or lines starting with space in the history.
+## See bash(1) for more options
+#HISTCONTROL=ignoreboth
+#
+## append to the history file, don't overwrite it
+#shopt -s histappend
+#
+## for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=3000
+HISTFILESIZE=3000
+#
+## check the window size after each command and, if necessary,
+## update the values of LINES and COLUMNS.
+#shopt -s checkwinsize
+#
+## If set, the pattern "**" used in a pathname expansion context will
+## match all files and zero or more directories and subdirectories.
+##shopt -s globstar
+#
+## make less more friendly for non-text input files, see lesspipe(1)
+#[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+#
+## set variable identifying the chroot you work in (used in the prompt below)
+#if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+#    debian_chroot=$(cat /etc/debian_chroot)
+#fi
+#
+## set a fancy prompt (non-color, unless we know we "want" color)
+#case "$TERM" in
+#    xterm-color) color_prompt=yes;;
+#esac
+#
+## uncomment for a colored prompt, if the terminal has the capability; turned
+## off by default to not distract the user: the focus in a terminal window
+## should be on the output of commands, not on the prompt
+##force_color_prompt=yes
+#
+#if [ -n "$force_color_prompt" ]; then
+#    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+#	# We have color support; assume it's compliant with Ecma-48
+#	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+#	# a case would tend to support setf rather than setaf.)
+#	color_prompt=yes
+#    else
+#	color_prompt=
+#    fi
+#fi
+#
+if [ "$color_prompt" = yes ]; then
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+else
+    PS1='${debian_chroot:+($debian_chroot)}\u : \W\$ '
+fi
+#unset color_prompt force_color_prompt
+#
+## If this is an xterm set the title to user@host:dir
+#case "$TERM" in
+#xterm*|rxvt*)
+#    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+#    ;;
+#*)
+#    ;;
+#esac
+#
+## enable color support of ls and also add handy aliases
+#if [ -x /usr/bin/dircolors ]; then
+#    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+#    alias ls='ls --color=auto'
+#    #alias dir='dir --color=auto'
+#    #alias vdir='vdir --color=auto'
+#
+#    alias grep='grep --color=auto'
+#    alias fgrep='fgrep --color=auto'
+#    alias egrep='egrep --color=auto'
+#fi
+#
+## colored GCC warnings and errors
+##export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+#
+## some more ls aliases
+#alias ll='ls -alF'
+#alias la='ls -A'
+#alias l='ls -CF'
+#
+## Add an "alert" alias for long running commands.  Use like so:
+##   sleep 10; alert
+#alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+#
+## Alias definitions.
+## You may want to put all your additions into a separate file like
+## ~/.bash_aliases, instead of adding them here directly.
+## See /usr/share/doc/bash-doc/examples in the bash-doc package.
+#
+#if [ -f ~/.bash_aliases ]; then
+#    . ~/.bash_aliases
+#fi
+#
+## enable programmable completion features (you don't need to enable
+## this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+## sources /etc/bash.bashrc).
+#if ! shopt -oq posix; then
+#  if [ -f /usr/share/bash-completion/bash_completion ]; then
+#    . /usr/share/bash-completion/bash_completion
+#  elif [ -f /etc/bash_completion ]; then
+#    . /etc/bash_completion
+#  fi
+#fi
+#
+alias steyr="ssh -XC steyr"
+#alias steyrhome="ssh  arsen@91.103.29.52 -p2222"
+#
+alias bb='vim ~/.bashrc'
+alias sb='source ~/.bashrc'
+#
+#alias cdt='cd ~/Documents/testing/'
+##arsen@arsen:~/.Arsen-TO-IPFire$ nohup sudo openvpn --config Arsen-TO-IPFire.ovpn
+alias connect='cd ~/.Arsen-TO-IPFire/; openvpn --config Arsen-TO-IPFire.ovpn'
+#alias cde='cd ~/Documents/facerec/face_recognizer/experiments/'
+#
+export EDITOR=vim
+#
+#
+#
+#
+#
+#
+#
+#
+## needs for kaldo
+#KALDO=/home/arsen/Documents/kaldi-trunk/
+#export LD_LIBRARY_PATH=/home/arsen/Documents/kaldi-trunk/tools/portaudio/install/lib:$LD_LIBRARY_PATH
+#export LD_LIBRARY_PATH=$LIBDIR:$LD_LIBRARY_PATH
+#
+#export GST_PLUGIN_PATH=/usr/share/:/usr/lib/x86_64-linux-gnu/gstreamer1.0/:$KALDO/src/gst-plugin
+#export PATH=$GST_PLUGIN_PATH:$PATH
+#export DATA_ROOT="/home/arsen/Documents/voice_rec/kaldi/egs/voxforge/mdata"
+#
+#
+#
+#export TESSDATA_PREFIX="/home/arsen/Documents/ocr/tesseract/"
+#export FRCN_ROOT="/home/arsen/Documents/ocr/fast-rcnn/"
+#export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+#
+#
+#
+#
+#export CAFFE_PYTHON="/home/arsen/Documents/caffe/python"
+#export PATH=$CAFFE_PYTHON:$PATH
+#export PYTHONPATH=$CAFFE_PYTHON
+#export LAGITELIQUE=/home/arsen/Documents/fime_ocr_library/lagitelique/
+#
+#
+#export CPATH="/home/arsen/Documents/llvm/build-3.7.0/Debug+Asserts/bin/"
+#export PATH=$CPATH:$PATH
+#export SVN_EDITOR=vim
+export PYTHONIOENCODING=UTF-8
+export PYTHONPATH=/Users/arsen/Documents:$PYTHONPATH
+export PATH=/usr/local/Cellar/qt5/5.6.0/bin/:$PATH
+export Tesseract_DIR=/Users/arsen/opencv3.1/tesseract/build/
+export OpenCV_DIR=/Users/arsen/opencv3.1/opencv/release/
+export TESSDATA_PREFIX=/Users/arsen/opencv3.1/tessdata/
+export OCRENGINE_ROOT=/Users/arsen/Documents/Projects/himnark/
+#export OCRENGINE_ROOT=/Users/arsen/Documents/Projects/himnark-web/himnark/OCR/
+#export LIBLEPT_HEADERSDIR=/usr/local/lib/
+
+export LIBTOOL=`which glibtool`
+export LIBTOOLIZE=`which glibtoolize`

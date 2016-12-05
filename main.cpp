@@ -155,7 +155,7 @@ vector<Rect> removeVerySmallBoxes(Mat src, vector<Rect>* groups) {
     const unsigned int imageArea = src.rows * src.cols;
     const unsigned int minWordArea = imageArea * 0.003;
     for (const auto& g : *groups) {
-        int selfArea = g.area();
+        unsigned int selfArea = g.area();
         if ( selfArea > minWordArea) {
             filteredBoxes.push_back(g);
         }

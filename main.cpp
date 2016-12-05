@@ -29,17 +29,6 @@ using namespace cv;
 using namespace cv::text;
 using json = nlohmann::json;
 
-void er_show(vector<Mat> &channels, vector<vector<ERStat> > &regions);
-
-// helper functions
-
-void show_help_and_exit(const char *cmd)
-{
-    cout << "    Usage: " << cmd << " <input_image> " << endl;
-    exit(-1);
-}
-
-
 using namespace std;
 static void system_exec(const std::string &cmd, const std::string &message)
 {
@@ -79,7 +68,6 @@ json res = json::object();
 void textRecognition(Mat &src, vector<Rect> &groups) 
 {
     for (auto g : groups) {
-        const string name = to_string(g.x) + "_" +  to_string(g.y) + ".jpg"; // TODO Change this to the temprorary image.
         Mat gray;
         int p = 4;
         int x = g.x - p > 0 ? g.x - p : g.x;
@@ -89,8 +77,14 @@ void textRecognition(Mat &src, vector<Rect> &groups)
 
         Rect newRect(x, y, w, h);
         cvtColor(src(newRect).clone(), gray, COLOR_BGR2GRAY);
-        imwrite(name, gray);
-        if (gray.cols < 400) {
+        Ptr<CLAHE> clahe = createCLAHE();
+        clahe->setClipLimit(4);
+
+        Mat dst;
+        clahe->apply(gray,dst);
+        const string name = "clahe_" + to_string(g.x) + "_" +  to_string(g.y) + ".jpg";
+        imwrite(name, dst);
+        if (dst.cols < 400) {
             system_exec("convert " + name + " -resize 800 -sharpen 0x3 " + name, "Error in the conversion phase.");
         }
         system_exec("tesseract " + name + " output -psm 7", "Error in the text recognition phase.");
@@ -103,7 +97,6 @@ void textRecognition(Mat &src, vector<Rect> &groups)
         text << file.rdbuf();
         string str = text.str();
         str = ::trim(str);
-        cout << str <<  endl;
         if (!str.empty()) {
             allText.insert(str);
         }
@@ -179,11 +172,6 @@ vector<Rect> runFilters(Mat src, vector<Rect>* groups) {
 }
 
 void groups_draw(Mat &src, vector<Rect> &groups, bool isFiltered = false) {
-    //for (int i=(int)groups.size()-1; i>=0; i--)
-    //{
-    //    const string name = to_string(groups.at(i).x) + "_" +  to_string(groups.at(i).y) + ".jpg";
-    //    imwrite(name, src(groups.at(i)).clone());
-    //}
     Scalar color(0, 0, 255);
     if (isFiltered) {
         color = Scalar( 255, 0, 0);
@@ -221,9 +209,6 @@ void er_show(vector<Mat> &channels, vector<vector<ERStat> > &regions)
     waitKey(-1);
 }
 
-
-//3 0.00001 0.8 0.2 0.1 0.3 0.3
-
 int i1 = 3; // thresholdDelta   – Threshold step in subsequent thresholds when extracting the component tree
 float f2 = 0.00001f; // minArea  – The minimum area (% of image size) allowed for retreived ER’s
 float f3 = 0.8f; // maxArea – The maximum area (% of image size) allowed for retreived ER’s
@@ -246,43 +231,26 @@ void ERFilterRun(const string& inputImageName) {
         channels.push_back(255-channels[c]);
     }
 
-    // Create ERFilter objects with the 1st and 2nd stage default classifiers
-    //Ptr<ERFilter> er_filter1 = createERFilterNM1(loadClassifierNM1("./res/trained_classifierNM1.xml"), 1, 0.0001f, 0.1f, 0.6f, true, 0.1f);
-    cout << "Accuracy 1 = " << f4 << endl;
-    cout << "Accuracy 2 = " << f6 << endl;
-    cout << "Accuracy 3 = " << f7 << endl;
     Ptr<ERFilter> er_filter1 = createERFilterNM1(loadClassifierNM1("./res/trained_classifierNM1.xml"), i1, f2, f3, f4, true, f5);
     Ptr<ERFilter> er_filter2 = createERFilterNM2(loadClassifierNM2("./res/trained_classifierNM2.xml"), f6);
 
     vector<vector<ERStat> > regions(channels.size());
     // Apply the default cascade classifier to each independent channel (could be done in parallel)
-    cout << "Extracting Class Specific Extremal Regions from " << (int)channels.size() << " channels ..." << endl;
-    cout << "    (...) this may take a while (...)" << endl << endl;
     for (int c=0; c<(int)channels.size(); c++) {
         er_filter1->run(channels[c], regions[c]);
         er_filter2->run(channels[c], regions[c]);
     }
 
     // Detect character groups
-    cout << "Grouping extracted ERs ... ";
     vector< vector<Vec2i> > region_groups;
     vector<Rect> groups_boxes;
-    //erGrouping(src, channels, regions, region_groups, groups_boxes, ERGROUPING_ORIENTATION_HORIZ);
     erGrouping(src, channels, regions, region_groups, groups_boxes, ERGROUPING_ORIENTATION_ANY, "./res/trained_classifier_erGrouping.xml", f7);
 
 
-    cout << "Box count before filtering : " << groups_boxes.size() << endl;
     vector<Rect> filteredBoxes = runFilters(src, &groups_boxes);
 
     // draw groups
-    cout << "Box count after filtering  : " << filteredBoxes.size() << endl;
     textRecognition(src, filteredBoxes);
-    //Mat nsrc = src.clone();
-    //groups_draw(src, groups_boxes);
-    //imshow("grouping",src);
-    //groups_draw(nsrc, filteredBoxes, true);
-    //imshow("filtered",nsrc);
-    //waitKey(0);
 
     // memory clean-up
     er_filter1.release();

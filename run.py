@@ -22,8 +22,11 @@ cmd4 = 'tesseract {0} out -psm 6'.format(tmp)
 subprocess.call(cmd4.split(), shell=False)
 outFile = open("out.txt", 'r')
 text = outFile.read()
+
+t = text.encode('ascii', 'ignore')
+print (t)
 outText = json.loads(open(outputFile).read())
-outText["text"].append(text)
+outText["text"].append(str(t))
 
 with open(outputFile, "w") as json_file:
         json.dump(outText, json_file, indent=4)

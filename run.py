@@ -3,6 +3,8 @@ import sys
 import os
 import json
 import subprocess
+import binascii
+
 
 url = json.loads(open(sys.argv[1]).read())
 dirName = (os.path.dirname(sys.argv[1]))
@@ -22,11 +24,9 @@ cmd4 = 'tesseract {0} out -psm 6'.format(tmp)
 subprocess.call(cmd4.split(), shell=False)
 outFile = open("out.txt", 'r')
 text = outFile.read()
-
 t = text.encode('ascii', 'ignore')
-print (t)
+m = str(t).replace("\\n", " ")
 outText = json.loads(open(outputFile).read())
-outText["text"].append(str(t))
-
+outText["text"].append(str(m))
 with open(outputFile, "w") as json_file:
         json.dump(outText, json_file, indent=4)

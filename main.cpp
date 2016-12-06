@@ -82,7 +82,7 @@ void textRecognition(Mat &src, vector<Rect> &groups)
 
         Mat dst;
         clahe->apply(gray,dst);
-        const string name = "clahe_" + to_string(g.x) + "_" +  to_string(g.y) + ".jpg";
+        const string name = "tmp.jpg";
         imwrite(name, dst);
         if (dst.cols < 400) {
             system_exec("convert " + name + " -resize 800 -sharpen 0x3 " + name, "Error in the conversion phase.");
